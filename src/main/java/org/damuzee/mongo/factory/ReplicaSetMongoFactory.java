@@ -5,10 +5,8 @@ import com.mongodb.client.MongoDatabase;
 import org.damuzee.mongo.MongoFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -69,7 +67,7 @@ public class ReplicaSetMongoFactory implements MongoFactory {
                 replicaSetSeeds.add(new ServerAddress(realHost, realPort));
             }
 
-            MongoClient client = null;
+            MongoClient client;
             if(authentication) {
                 logger.info("Mongodb auth username {} , password {}, db {}",username,password,dbName);
                 MongoCredential credentials = MongoCredential.createScramSha1Credential(username, dbName, password.toCharArray());

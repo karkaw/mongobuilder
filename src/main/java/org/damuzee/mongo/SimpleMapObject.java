@@ -2,10 +2,12 @@ package org.damuzee.mongo;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import org.apache.commons.lang.StringUtils;
 import org.bson.types.ObjectId;
 
 import javax.script.SimpleBindings;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -13,11 +15,15 @@ import java.util.regex.Pattern;
 /**
  * 适合mongodb 文档的数据结构
  */
-public class SimpleMapObject extends BasicDBObject  implements DBObject,Map<String, Object>{
+public class SimpleMapObject<T extends SimpleMapObject> extends BasicDBObject  implements DBObject,Map<String, Object>{
 
     public static final String ID = "_id";
 
     public SimpleMapObject() { }
+
+    public SimpleMapObject(String id) {
+        this.setObjectId(id);
+    }
 
     public SimpleMapObject(String key, Object object) {
         this.put(key, object);
@@ -32,6 +38,38 @@ public class SimpleMapObject extends BasicDBObject  implements DBObject,Map<Stri
     public String getId() {
         Object id = this.get(MongoConstaints.ID);
         return String.valueOf(id);
+    }
+
+    public T setId(String id) {
+        this.put(MongoConstaints.ID, id);
+        return (T)this;
+    }
+
+    public T setObjectId(String id) {
+        if (StringUtils.isNotBlank(id)) {
+            this.put(MongoConstaints.ID, new ObjectId(id));
+        }
+        return (T)this;
+    }
+
+    public Map getMap(String key){
+        Object map = this.get(key);
+        if (map == null) {
+            return null;
+        }
+        return (Map)map;
+    }
+
+    public Collection getCollection(String key) {
+        Object collection = this.get(key);
+        if (collection == null) {
+            return null;
+        }
+        return (Collection) collection;
+    }
+
+    public List getList(String key) {
+        return (List)getCollection(key);
     }
 
     /**
@@ -257,24 +295,24 @@ public class SimpleMapObject extends BasicDBObject  implements DBObject,Map<Stri
         return this;
     }
 
-    public  SimpleMapObject inc(String key,Object value){
+    public  T inc(String key,Object value){
         Map inc = new SimpleBindings();
         if (this.get(MongoConstaints.INC) != null) {
             inc = (Map)this.get(MongoConstaints.INC);
         }
         inc.put(key, value);
         this.put(MongoConstaints.INC, inc);
-        return this;
+        return (T)this;
     }
 
-    public  SimpleMapObject inc(SimpleMapObject incM ){
+    public  T inc(SimpleMapObject incM ){
         Map inc = new SimpleBindings();
         if (this.get(MongoConstaints.INC) != null) {
             inc = (Map)this.get(MongoConstaints.INC);
         }
         inc.putAll(incM);
         this.put(MongoConstaints.INC, inc);
-        return this;
+        return (T)this;
     }
 
     /**

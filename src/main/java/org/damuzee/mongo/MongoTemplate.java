@@ -127,7 +127,7 @@ public class MongoTemplate {
         }
 
         if(query == null){
-            query = new SimpleMapObject(MongoConstaints.ID,new ObjectId((String)update.remove(MongoConstaints.ID)));
+            query = new SimpleMapObject(MongoConstaints.ID,new ObjectId(String.valueOf(update.remove(MongoConstaints.ID))));
         }
 
         Set<Map.Entry<String, Object>> entries = update.entrySet();
@@ -357,41 +357,6 @@ public class MongoTemplate {
 
 
     /**
-     * 查找一条记录
-     *
-     * @param where
-     * @param filter
-     * @return
-     */
-    public Map<String,Object> findOne(String tableName, Map  where,Map filter) {
-
-        logger.debug("findOne tableName {} ,where {}  ,filter {}",tableName,where,filter);
-
-        MongoCollection collection = getCollection(tableName);
-
-        FindIterable iterable = collection.find(new SimpleMapObject(where));
-        if(filter != null){
-            iterable.projection(new SimpleMapObject(filter));
-        }
-
-        Document result = (Document)iterable.first();
-        if(result== null){
-            return result;
-        }
-
-        Object id = result.get(MongoConstaints.ID);
-        if (!(id instanceof String)){
-            result.put(MongoConstaints.ID, String.valueOf(id));
-        }
-
-        logger.debug("result : {}", iterable);
-
-        return result ;
-    }
-
-
-
-    /**
      * 更新文档
      *
      * @param tableName 文档名称
@@ -422,6 +387,9 @@ public class MongoTemplate {
         }
         collection.findOneAndUpdate(new SimpleMapObject(query), new SimpleMapObject(update));
     }
+
+
+
     /**
      * 分页查询
      *
@@ -448,28 +416,39 @@ public class MongoTemplate {
         MongoCollection collection = getCollection(tableName);
 
         FindIterable iterable;
-        if (query  == null) {
-            if (filter == null) {
-                iterable = collection.find();
-            } else {
-                iterable = collection.find(new BasicDBObject()).projection( new SimpleMapObject(filter));
-            }
+//        if (query  == null) {
+//            if (filter == null) {
+//                iterable = collection.find();
+//            } else {
+//                iterable = collection.find(new BasicDBObject()).projection( new SimpleMapObject(filter));
+//            }
+//        } else {
+//            SimpleMapObject where =  new SimpleMapObject(query);
+//            //如果数据库有mongodb的自身_id
+//            Object _id = where.get(MongoConstaints.ID);
+//            if (_id != null) {
+//                where.put(MongoConstaints.ID, new ObjectId(String.valueOf(_id)));
+//            }
+//            if (filter == null) {
+//                iterable = collection.find(where);
+//            } else {
+//                iterable = collection.find(where).projection( new SimpleMapObject(filter));
+//            }
+//        }
+        SimpleMapObject where =  new SimpleMapObject(query);
+        //如果数据库有mongodb的自身_id
+        Object _id = where.get(MongoConstaints.ID);
+        if (_id != null) {
+            where.put(MongoConstaints.ID, new ObjectId(String.valueOf(_id)));
+        }
+        if (filter == null) {
+            iterable = collection.find(where);
         } else {
-            SimpleMapObject where =  new SimpleMapObject(query);
-            //如果数据库有mongodb的自身_id
-            Object _id = where.get(MongoConstaints.ID);
-            if (_id != null) {
-                where.put(MongoConstaints.ID, new ObjectId(String.valueOf(_id)));
-            }
-            if (filter == null) {
-                iterable = collection.find(where);
-            } else {
-                iterable = collection.find(where).projection( new SimpleMapObject(filter));
-            }
+            iterable = collection.find(where).projection( new SimpleMapObject(filter));
         }
 
         //统计总数
-        Long count = collection.count();
+        Long count = collection.count(where);
 
         if (sort != null) {
             iterable.sort( new SimpleMapObject(sort));
@@ -511,6 +490,38 @@ public class MongoTemplate {
         logger.debug("result : {}",paramsMap);
 
         return paramsMap;
+    }
+    /**
+     * 查找一条记录
+     *
+     * @param where
+     * @param filter
+     * @return
+     */
+    public Map<String,Object> findOne(String tableName, Map  where,Map filter) {
+
+        logger.debug("findOne tableName {} ,where {}  ,filter {}",tableName,where,filter);
+
+        MongoCollection collection = getCollection(tableName);
+
+        FindIterable iterable = collection.find(new SimpleMapObject(where));
+        if(filter != null){
+            iterable.projection(new SimpleMapObject(filter));
+        }
+
+        Document result = (Document)iterable.first();
+        if(result== null){
+            return result;
+        }
+
+        Object id = result.get(MongoConstaints.ID);
+        if (!(id instanceof String)){
+            result.put(MongoConstaints.ID, String.valueOf(id));
+        }
+
+        logger.debug("result : {}", iterable);
+
+        return result ;
     }
 
 }
